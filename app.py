@@ -41,63 +41,12 @@ if st.button("Organize"):
                     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                         zip_ref.extractall(unzip_dir)
 
-                    # Get list of files
-                    files = [f for f in os.listdir(unzip_dir) if os.path.isfile(os.path.join(unzip_dir, f))]
-                    total_files = min(len(files), AppConfig.MAX_FILES_TO_PROCESS)
-                    moved_files = []
-                    skipped_files = []
-
                     # Initialize progress bar and status text
                     progress_bar = st.progress(0)
                     status_text = st.empty()
 
-                    # Process files
-                    for i, file_name in enumerate(files):
-                        if i >= AppConfig.MAX_FILES_TO_PROCESS:
-                            break
-                        file_path = os.path.join(unzip_dir, file_name)
-                        file_ext = os.path.splitext(file_name)[1].lower()
-                        file_hash = organizer.get_file_hash(file_path)
-
-                        # Update progress
-                        progress = (i + 1) / total_files
-                        progress_bar.progress(min(progress, 1.0))
-                        status_text.text(f"Processing file {i + 1}/{total_files}: {file_name}")
-
-                        # Check for duplicates
-                        if file_hash in organizer.file_hashes:
-                            logging.info(f"Skipping duplicate file: {file_name} (matches {organizer.file_hashes[file_hash]})")
-                            skipped_files.append(f"{file_name} (duplicate of {organizer.file_hashes[file_hash]})")
-                            continue
-
-                        # Determine category
-                        category = 'Others'
-                        for cat, extensions in organizer.categories.items():
-                            if file_ext in extensions:
-                                category = cat
-                                break
-
-                        # Move file
-                        destination_folder = os.path.join(unzip_dir, category)
-                        os.makedirs(destination_folder, exist_ok=True)
-                        destination_path = os.path.join(destination_folder, file_name)
-
-                        # Handle filename conflicts
-                        base, ext = os.path.splitext(file_name)
-                        counter = 1
-                        while os.path.exists(destination_path):
-                            new_name = f"{base}_{counter}{ext}"
-                            destination_path = os.path.join(destination_folder, new_name)
-                            counter += 1
-
-                        try:
-                            shutil.move(file_path, destination_path)
-                            organizer.file_hashes[file_hash] = file_name
-                            moved_files.append(f"{file_name} -> {category}/{os.path.basename(destination_path)}")
-                            logging.info(f"Moved {file_name} to {category}")
-                        except Exception as e:
-                            logging.error(f"Failed to move {file_name}: {str(e)}")
-                            skipped_files.append(f"{file_name} (error: {str(e)})")
+                    # Organize files using FileOrganizer
+                    moved_files, skipped_files = organizer.organize_files(unzip_dir, progress_bar, status_text)
 
                     # Create output zip
                     output_zip = os.path.join(temp_dir, "organized_files.zip")
