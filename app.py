@@ -2,6 +2,8 @@ import streamlit as st
 from file_organizer import FileOrganizer
 import os
 import shutil
+import zipfile
+import tempfile
 from config import AppConfig
 import logging
 
@@ -10,105 +12,135 @@ logging.basicConfig(level=AppConfig.LOG_LEVEL, format='%(asctime)s - %(levelname
 # Main UI
 st.title("AI File Organizer")
 st.markdown("""
-    Organize your local folders with ease! Enter the path to a folder, and the app will categorize files into 
+    Organize your files with ease! Upload a zip file of your folder, and the app will categorize files into 
     **Documents**, **Images**, **Videos**, and **Others** based on their extensions. Duplicate files are skipped.
 """)
 
 # Initialize FileOrganizer
 organizer = FileOrganizer()
 
-# Input for local folder path
-folder_path = st.text_input("Enter the path to your local folder (e.g., C:/Users/user/Desktop/TestFolder):", "")
+# File upload for web app
+uploaded_file = st.file_uploader("Upload a zip file containing your files (e.g., TestFolder.zip):", type="zip")
 
 if st.button("Organize"):
-    if not folder_path:
-        st.error("Please enter a valid folder path.")
-    elif not os.path.isdir(folder_path):
-        st.error(f"Invalid folder path: {folder_path}")
+    if not uploaded_file:
+        st.error("Please upload a zip file.")
     else:
         with st.spinner("Organizing files..."):
             try:
-                # Get list of files to process
-                files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
-                total_files = min(len(files), AppConfig.MAX_FILES_TO_PROCESS)
-                moved_files = []
-                skipped_files = []
+                # Create temporary directories
+                with tempfile.TemporaryDirectory() as temp_dir:
+                    # Save uploaded zip
+                    zip_path = os.path.join(temp_dir, "uploaded.zip")
+                    with open(zip_path, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
 
-                # Initialize progress bar and status text
-                progress_bar = st.progress(0)
-                status_text = st.empty()
+                    # Unzip to temp folder
+                    unzip_dir = os.path.join(temp_dir, "unzip")
+                    os.makedirs(unzip_dir, exist_ok=True)
+                    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                        zip_ref.extractall(unzip_dir)
 
-                # Process files with progress updates
-                for i, file_name in enumerate(files):
-                    if i >= AppConfig.MAX_FILES_TO_PROCESS:
-                        break
-                    file_path = os.path.join(folder_path, file_name)
-                    file_ext = os.path.splitext(file_name)[1].lower()
-                    file_hash = organizer.get_file_hash(file_path)
+                    # Get list of files
+                    files = [f for f in os.listdir(unzip_dir) if os.path.isfile(os.path.join(unzip_dir, f))]
+                    total_files = min(len(files), AppConfig.MAX_FILES_TO_PROCESS)
+                    moved_files = []
+                    skipped_files = []
 
-                    # Update progress
-                    progress = (i + 1) / total_files
-                    progress_bar.progress(min(progress, 1.0))
-                    status_text.text(f"Processing file {i + 1}/{total_files}: {file_name}")
+                    # Initialize progress bar and status text
+                    progress_bar = st.progress(0)
+                    status_text = st.empty()
 
-                    # Check for duplicates
-                    if file_hash in organizer.file_hashes:
-                        logging.info(f"Skipping duplicate file: {file_name} (matches {organizer.file_hashes[file_hash]})")
-                        skipped_files.append(f"{file_name} (duplicate of {organizer.file_hashes[file_hash]})")
-                        continue
-
-                    # Determine category
-                    category = 'Others'
-                    for cat, extensions in organizer.categories.items():
-                        if file_ext in extensions:
-                            category = cat
+                    # Process files
+                    for i, file_name in enumerate(files):
+                        if i >= AppConfig.MAX_FILES_TO_PROCESS:
                             break
+                        file_path = os.path.join(unzip_dir, file_name)
+                        file_ext = os.path.splitext(file_name)[1].lower()
+                        file_hash = organizer.get_file_hash(file_path)
 
-                    # Move file
-                    destination_folder = os.path.join(folder_path, category)
-                    os.makedirs(destination_folder, exist_ok=True)
-                    destination_path = os.path.join(destination_folder, file_name)
+                        # Update progress
+                        progress = (i + 1) / total_files
+                        progress_bar.progress(min(progress, 1.0))
+                        status_text.text(f"Processing file {i + 1}/{total_files}: {file_name}")
 
-                    # Handle filename conflicts
-                    base, ext = os.path.splitext(file_name)
-                    counter = 1
-                    while os.path.exists(destination_path):
-                        new_name = f"{base}_{counter}{ext}"
-                        destination_path = os.path.join(destination_folder, new_name)
-                        counter += 1
+                        # Check for duplicates
+                        if file_hash in organizer.file_hashes:
+                            logging.info(f"Skipping duplicate file: {file_name} (matches {organizer.file_hashes[file_hash]})")
+                            skipped_files.append(f"{file_name} (duplicate of {organizer.file_hashes[file_hash]})")
+                            continue
 
-                    try:
-                        shutil.move(file_path, destination_path)
-                        organizer.file_hashes[file_hash] = file_name
-                        moved_files.append(f"{file_name} -> {category}/{os.path.basename(destination_path)}")
-                        logging.info(f"Moved {file_name} to {category}")
-                    except Exception as e:
-                        logging.error(f"Failed to move {file_name}: {str(e)}")
-                        skipped_files.append(f"{file_name} (error: {str(e)})")
+                        # Determine category
+                        category = 'Others'
+                        for cat, extensions in organizer.categories.items():
+                            if file_ext in extensions:
+                                category = cat
+                                break
 
-                # Clear progress bar and show results
-                progress_bar.empty()
-                status_text.empty()
-                st.success("Folder organized!")
-                
-                if moved_files:
-                    st.subheader("Moved Files:")
-                    for move in moved_files:
-                        st.write(f"- {move}")
-                
-                if skipped_files:
-                    st.subheader("Skipped Files:")
-                    for skip in skipped_files:
-                        st.write(f"- {skip}")
-                
-                if not moved_files and not skipped_files:
-                    st.info("No files were found to organize.")
+                        # Move file
+                        destination_folder = os.path.join(unzip_dir, category)
+                        os.makedirs(destination_folder, exist_ok=True)
+                        destination_path = os.path.join(destination_folder, file_name)
+
+                        # Handle filename conflicts
+                        base, ext = os.path.splitext(file_name)
+                        counter = 1
+                        while os.path.exists(destination_path):
+                            new_name = f"{base}_{counter}{ext}"
+                            destination_path = os.path.join(destination_folder, new_name)
+                            counter += 1
+
+                        try:
+                            shutil.move(file_path, destination_path)
+                            organizer.file_hashes[file_hash] = file_name
+                            moved_files.append(f"{file_name} -> {category}/{os.path.basename(destination_path)}")
+                            logging.info(f"Moved {file_name} to {category}")
+                        except Exception as e:
+                            logging.error(f"Failed to move {file_name}: {str(e)}")
+                            skipped_files.append(f"{file_name} (error: {str(e)})")
+
+                    # Create output zip
+                    output_zip = os.path.join(temp_dir, "organized_files.zip")
+                    with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zip_ref:
+                        for root, _, files in os.walk(unzip_dir):
+                            for file in files:
+                                file_path = os.path.join(root, file)
+                                arcname = os.path.relpath(file_path, unzip_dir)
+                                zip_ref.write(file_path, arcname)
+
+                    # Clear progress bar and show results
+                    progress_bar.empty()
+                    status_text.empty()
+                    st.success("Files organized! Download the organized files below.")
+
+                    # Provide download link
+                    with open(output_zip, "rb") as f:
+                        st.download_button(
+                            label="Download Organized Files",
+                            data=f,
+                            file_name="organized_files.zip",
+                            mime="application/zip"
+                        )
+
+                    if moved_files:
+                        st.subheader("Moved Files:")
+                        for move in moved_files:
+                            st.write(f"- {move}")
+
+                    if skipped_files:
+                        st.subheader("Skipped Files:")
+                        for skip in skipped_files:
+                            st.write(f"- {skip}")
+
+                    if not moved_files and not skipped_files:
+                        st.info("No files were found to organize.")
             except Exception as e:
-                st.error(f"Error organizing folder: {str(e)}")
-                logging.error(f"Error organizing folder {folder_path}: {str(e)}")
+                st.error(f"Error organizing files: {str(e)}")
+                logging.error(f"Error organizing files: {str(e)}")
 
 st.markdown("""
     ### How It Works
+    - Upload a zip file containing your files.
     - Files are categorized based on their extensions:
       - **Documents**: .txt, .doc, .docx, .pdf, .xls, .xlsx, .ppt, .pptx
       - **Images**: .jpg, .jpeg, .png, .gif, .bmp, .tiff
@@ -116,6 +148,7 @@ st.markdown("""
       - **Others**: All other file types
     - Duplicate files (based on content) are skipped.
     - Files with the same name are renamed automatically (e.g., file.txt -> file_1.txt).
+    - Download the organized files as a zip.
 """)
 
 # Footer with Social Media Links and Glowing Developer Credit
