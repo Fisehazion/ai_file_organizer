@@ -1,0 +1,4 @@
+echo __pycache__ > .gitignore
+echo *.pyc >> .gitignore
+echo *.json >> .gitignore
+echo *.pickle >> .gitignore
