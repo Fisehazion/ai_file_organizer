@@ -1,9 +1,9 @@
 import streamlit as st
 from file_organizer import FileOrganizer
 import os
-import shutil
 import zipfile
 import tempfile
+import shutil
 from config import AppConfig
 import logging
 
@@ -33,7 +33,7 @@ if st.button("Organize"):
                     # Save uploaded zip
                     zip_path = os.path.join(temp_dir, "uploaded.zip")
                     with open(zip_path, "wb") as f:
-                        f.write(uploaded_file.read())  # Read directly to avoid memory issues
+                        f.write(uploaded_file.read())
 
                     # Unzip to temp folder
                     unzip_dir = os.path.join(temp_dir, "unzip")
@@ -41,20 +41,29 @@ if st.button("Organize"):
                     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                         zip_ref.extractall(unzip_dir)
 
-                    # Initialize progress bar and status text
+                    # Organize files using FileOrganizer
                     progress_bar = st.progress(0)
                     status_text = st.empty()
-
-                    # Organize files using FileOrganizer
                     moved_files, skipped_files = organizer.organize_files(unzip_dir, progress_bar, status_text)
 
-                    # Create output zip
+                    # Create clean output directory for organized files
+                    output_dir = os.path.join(temp_dir, "output")
+                    os.makedirs(output_dir, exist_ok=True)
+
+                    # Move only organized category folders to output_dir
+                    for category in ['Documents', 'Images', 'Videos', 'Others']:
+                        src_category = os.path.join(unzip_dir, category)
+                        dst_category = os.path.join(output_dir, category)
+                        if os.path.exists(src_category):
+                            shutil.move(src_category, dst_category)
+
+                    # Create output zip from organized folders
                     output_zip = os.path.join(temp_dir, "organized_files.zip")
                     with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zip_ref:
-                        for root, _, files in os.walk(unzip_dir):
+                        for root, _, files in os.walk(output_dir):
                             for file in files:
                                 file_path = os.path.join(root, file)
-                                arcname = os.path.relpath(file_path, unzip_dir)
+                                arcname = os.path.relpath(file_path, output_dir)
                                 zip_ref.write(file_path, arcname)
 
                     # Clear progress bar and show results
@@ -62,7 +71,7 @@ if st.button("Organize"):
                     status_text.empty()
                     st.success("Files organized! Download the organized files below.")
 
-                    # Provide download link with saved file
+                    # Provide download link
                     with open(output_zip, "rb") as f:
                         st.download_button(
                             label="Download Organized Files",
@@ -83,6 +92,8 @@ if st.button("Organize"):
 
                     if not moved_files and not skipped_files:
                         st.info("No files were found to organize.")
+            except zipfile.BadZipFile:
+                st.error("Invalid or corrupted zip file. Please upload a valid .zip.")
             except Exception as e:
                 st.error(f"Error organizing files: {str(e)}")
                 logging.error(f"Error organizing files: {str(e)}")
