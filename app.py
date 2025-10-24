@@ -33,7 +33,7 @@ if st.button("Organize"):
                     # Save uploaded zip
                     zip_path = os.path.join(temp_dir, "uploaded.zip")
                     with open(zip_path, "wb") as f:
-                        f.write(uploaded_file.getbuffer())
+                        f.write(uploaded_file.read())  # Read directly to avoid memory issues
 
                     # Unzip to temp folder
                     unzip_dir = os.path.join(temp_dir, "unzip")
@@ -113,11 +113,11 @@ if st.button("Organize"):
                     status_text.empty()
                     st.success("Files organized! Download the organized files below.")
 
-                    # Provide download link
+                    # Provide download link with saved file
                     with open(output_zip, "rb") as f:
                         st.download_button(
                             label="Download Organized Files",
-                            data=f,
+                            data=f.read(),
                             file_name="organized_files.zip",
                             mime="application/zip"
                         )
