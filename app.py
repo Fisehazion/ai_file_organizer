@@ -7,21 +7,13 @@ import shutil
 from config import AppConfig
 import logging
 
-# Conditional imports for AI functionality
-try:
-    import PyPDF2
-    from transformers import pipeline
-    AI_AVAILABLE = True
-except ImportError:
-    AI_AVAILABLE = False
-
 logging.basicConfig(level=AppConfig.LOG_LEVEL, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Main UI
-st.title("SmartSort")
+st.title("AI File Organizer")
 st.markdown("""
-    Organize your files with ease! Upload a zip file of your folder, and **SmartSort** will categorize files into 
-    **Documents**, **Images**, **Videos**, **Audio**, and **Others** based on their extensions. AI-based content analysis for text files is available locally.
+    Organize your files with ease! Upload a zip file of your folder, and the app will categorize files into 
+    **Documents**, **Images**, **Videos**, **Audio**, and **Others** based on their extensions. Duplicate files are skipped.
 """)
 
 # Initialize FileOrganizer
@@ -29,9 +21,6 @@ organizer = FileOrganizer()
 
 # File upload for web app
 uploaded_file = st.file_uploader("Upload a zip file containing your files (e.g., TestFolder.zip):", type="zip")
-
-# AI categorization toggle (only if AI is available)
-use_ai = st.checkbox("Use AI-based categorization for text files (e.g., .pdf, .txt)", value=False, disabled=not AI_AVAILABLE)
 
 if st.button("Organize"):
     if not uploaded_file:
@@ -52,15 +41,10 @@ if st.button("Organize"):
                     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                         zip_ref.extractall(unzip_dir)
 
-                    # Initialize AI classifier if enabled and available
-                    classifier = None
-                    if use_ai and AI_AVAILABLE:
-                        classifier = pipeline("text-classification", model=AppConfig.AI_MODEL_NAME)
-
                     # Organize files using FileOrganizer
                     progress_bar = st.progress(0)
                     status_text = st.empty()
-                    moved_files, skipped_files = organizer.organize_files(unzip_dir, progress_bar, status_text, use_ai=use_ai, classifier=classifier)
+                    moved_files, skipped_files = organizer.organize_files(unzip_dir, progress_bar, status_text)
 
                     # Create clean output directory for organized files
                     output_dir = os.path.join(temp_dir, "output")
@@ -123,7 +107,6 @@ st.markdown("""
       - **Videos**: .mp4, .avi, .mkv, .mov, .wmv
       - **Audio**: .mp3, .wav, .ogg, .flac
       - **Others**: All other file types
-    - **AI Categorization** (available locally): Text files (.txt, .pdf) are analyzed for content (e.g., classified as 'Reports', 'Invoices') using a pre-trained AI model.
     - Duplicate files (based on content) are skipped.
     - Files with the same name are renamed automatically (e.g., file.txt -> file_1.txt).
     - Download the organized files as a zip.

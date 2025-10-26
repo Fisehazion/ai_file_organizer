@@ -3,7 +3,6 @@ import shutil
 import hashlib
 from config import AppConfig
 import logging
-import PyPDF2
 
 class FileOrganizer:
     def __init__(self):
@@ -14,7 +13,6 @@ class FileOrganizer:
             'Audio': ['.mp3', '.wav', '.ogg', '.flac'],
             'Others': []
         }
-        self.ai_categories = ['Reports', 'Invoices', 'Letters', 'Others']  # AI-based subcategories
         self.file_hashes = {}
 
     def get_file_hash(self, file_path):
@@ -29,25 +27,7 @@ class FileOrganizer:
             logging.error(f"Failed to hash {file_path}: {str(e)}")
             return None
 
-    def extract_text(self, file_path):
-        """Extract text from .txt or .pdf files for AI categorization."""
-        try:
-            if file_path.endswith('.txt'):
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    return f.read()[:512]  # Limit to 512 chars for DistilBERT
-            elif file_path.endswith('.pdf'):
-                with open(file_path, 'rb') as f:
-                    reader = PyPDF2.PdfReader(f)
-                    text = ""
-                    for page in reader.pages[:2]:  # Limit to first 2 pages
-                        text += page.extract_text() or ""
-                    return text[:512]
-            return ""
-        except Exception as e:
-            logging.error(f"Failed to extract text from {file_path}: {str(e)}")
-            return ""
-
-    def organize_files(self, folder_path, progress_bar=None, status_text=None, use_ai=False, classifier=None):
+    def organize_files(self, folder_path, progress_bar=None, status_text=None):
         """Organize files in the given folder into category subfolders."""
         moved_files = []
         skipped_files = []
@@ -89,21 +69,10 @@ class FileOrganizer:
 
             # Determine category
             category = 'Others'
-            if use_ai and file_ext in ['.txt', '.pdf'] and classifier:
-                # AI-based categorization for text files
-                text = self.extract_text(file_path)
-                if text:
-                    result = classifier(text)[0]
-                    label = result['label'] if result['score'] > 0.7 else 'Others'
-                    category = 'Documents/' + label  # e.g., Documents/Reports
-                else:
-                    category = 'Documents'  # Fallback to extension-based
-            else:
-                # Extension-based categorization
-                for cat, extensions in self.categories.items():
-                    if file_ext in extensions:
-                        category = cat
-                        break
+            for cat, extensions in self.categories.items():
+                if file_ext in extensions:
+                    category = cat
+                    break
 
             # Move file to category folder
             destination_folder = os.path.join(folder_path, category)
