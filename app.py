@@ -13,7 +13,7 @@ logging.basicConfig(level=AppConfig.LOG_LEVEL, format='%(asctime)s - %(levelname
 st.title("AI File Organizer")
 st.markdown("""
     Organize your files with ease! Upload a zip file of your folder, and the app will categorize files into 
-    **Documents**, **Images**, **Videos**, and **Others** based on their extensions. Duplicate files are skipped.
+    **Documents**, **Images**, **Videos**, **Audio**, and **Others** based on their extensions. Duplicate files are skipped.
 """)
 
 # Initialize FileOrganizer
@@ -51,7 +51,7 @@ if st.button("Organize"):
                     os.makedirs(output_dir, exist_ok=True)
 
                     # Move only organized category folders to output_dir
-                    for category in ['Documents', 'Images', 'Videos', 'Others']:
+                    for category in ['Documents', 'Images', 'Videos', 'Audio', 'Others']:
                         src_category = os.path.join(unzip_dir, category)
                         dst_category = os.path.join(output_dir, category)
                         if os.path.exists(src_category):
@@ -105,6 +105,7 @@ st.markdown("""
       - **Documents**: .txt, .doc, .docx, .pdf, .xls, .xlsx, .ppt, .pptx
       - **Images**: .jpg, .jpeg, .png, .gif, .bmp, .tiff
       - **Videos**: .mp4, .avi, .mkv, .mov, .wmv
+      - **Audio**: .mp3, .wav, .ogg, .flac
       - **Others**: All other file types
     - Duplicate files (based on content) are skipped.
     - Files with the same name are renamed automatically (e.g., file.txt -> file_1.txt).

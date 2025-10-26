@@ -10,6 +10,7 @@ class FileOrganizer:
             'Documents': ['.txt', '.doc', '.docx', '.pdf', '.xls', '.xlsx', '.ppt', '.pptx'],
             'Images': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff'],
             'Videos': ['.mp4', '.avi', '.mkv', '.mov', '.wmv'],
+            'Audio': ['.mp3', '.wav', '.ogg', '.flac'],
             'Others': []
         }
         self.file_hashes = {}
