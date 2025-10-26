@@ -1,4 +1,1 @@
-streamlit
-PyPDF2==3.0.1
-transformers==4.57.1
-torch==2.2.2
+-e "streamlit\nPyPDF2==3.0.1" 

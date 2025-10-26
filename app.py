@@ -6,8 +6,14 @@ import tempfile
 import shutil
 from config import AppConfig
 import logging
-import PyPDF2
-from transformers import pipeline
+
+# Conditional imports for AI functionality
+try:
+    import PyPDF2
+    from transformers import pipeline
+    AI_AVAILABLE = True
+except ImportError:
+    AI_AVAILABLE = False
 
 logging.basicConfig(level=AppConfig.LOG_LEVEL, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -15,7 +21,7 @@ logging.basicConfig(level=AppConfig.LOG_LEVEL, format='%(asctime)s - %(levelname
 st.title("SmartSort")
 st.markdown("""
     Organize your files with ease! Upload a zip file of your folder, and **SmartSort** will categorize files into 
-    **Documents**, **Images**, **Videos**, **Audio**, and **Others** based on their extensions or AI-based content analysis for text files. Duplicate files are skipped.
+    **Documents**, **Images**, **Videos**, **Audio**, and **Others** based on their extensions. AI-based content analysis for text files is available locally.
 """)
 
 # Initialize FileOrganizer
@@ -24,8 +30,8 @@ organizer = FileOrganizer()
 # File upload for web app
 uploaded_file = st.file_uploader("Upload a zip file containing your files (e.g., TestFolder.zip):", type="zip")
 
-# AI categorization toggle
-use_ai = st.checkbox("Use AI-based categorization for text files (e.g., .pdf, .txt)", value=False)
+# AI categorization toggle (only if AI is available)
+use_ai = st.checkbox("Use AI-based categorization for text files (e.g., .pdf, .txt)", value=False, disabled=not AI_AVAILABLE)
 
 if st.button("Organize"):
     if not uploaded_file:
@@ -46,9 +52,9 @@ if st.button("Organize"):
                     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                         zip_ref.extractall(unzip_dir)
 
-                    # Initialize AI classifier if enabled
+                    # Initialize AI classifier if enabled and available
                     classifier = None
-                    if use_ai:
+                    if use_ai and AI_AVAILABLE:
                         classifier = pipeline("text-classification", model=AppConfig.AI_MODEL_NAME)
 
                     # Organize files using FileOrganizer
@@ -111,13 +117,13 @@ if st.button("Organize"):
 st.markdown("""
     ### How It Works
     - Upload a zip file containing your files.
-    - Files are categorized based on their extensions or AI-based content analysis (if enabled):
+    - Files are categorized based on their extensions:
       - **Documents**: .txt, .doc, .docx, .pdf, .xls, .xlsx, .ppt, .pptx
       - **Images**: .jpg, .jpeg, .png, .gif, .bmp, .tiff
       - **Videos**: .mp4, .avi, .mkv, .mov, .wmv
       - **Audio**: .mp3, .wav, .ogg, .flac
       - **Others**: All other file types
-    - **AI Categorization** (optional): Text files (.txt, .pdf) are analyzed for content (e.g., classified as 'Reports', 'Invoices') using a pre-trained AI model.
+    - **AI Categorization** (available locally): Text files (.txt, .pdf) are analyzed for content (e.g., classified as 'Reports', 'Invoices') using a pre-trained AI model.
     - Duplicate files (based on content) are skipped.
     - Files with the same name are renamed automatically (e.g., file.txt -> file_1.txt).
     - Download the organized files as a zip.
