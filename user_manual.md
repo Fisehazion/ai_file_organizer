@@ -1,104 +1,109 @@
 User Manual for AI File Organizer App
 Overview
-The AI File Organizer App helps you organize files in a local folder or Google Drive folder using AI-powered categorization and duplicate detection. Built with Streamlit for an easy web interface, it supports seamless Google Drive integration via folder links.
+The AI File Organizer App helps you organize files by uploading a zip file through a user-friendly Streamlit web interface. It categorizes files into Documents, Images, Videos, and Others based on their extensions, skips duplicates using AI-powered detection, and provides a downloadable organized zip file. Deployed on Streamlit Cloud, it’s perfect for quick file organization without local setup.
 Prerequisites
 
-Anaconda: Installed for managing the app environment.
-Google Drive Access: A Google account with a shared folder link for Drive organization.
+Anaconda: Installed for local development or testing (optional for users).
 Browser: Chrome, Firefox, or any modern browser.
-Internet: Required for Google Drive and initial setup.
+Internet: Required to access the deployed app and upload/download zip files.
 
-Setup Instructions
-1. Install Dependencies
+Setup Instructions (For Developers)
+
+Install Dependencies
 
 Open Anaconda Prompt.
-Create and activate a new environment:conda create -n file_organizer python=3.11
+Create and activate a new environment:conda create -n file_organizer python=3.9
 conda activate file_organizer
 
 
-Install required packages:conda install streamlit pandas scikit-learn
-pip install transformers pydrive2 google-api-python-client google-auth-oauthlib google-auth-httplib2
+Install required package:pip install streamlit
 
 
 
-2. Google Drive Setup
 
-Go to Google Cloud Console.
-Create a project and enable the Google Drive API.
-Under "Credentials," create an OAuth 2.0 Client ID for a "Web application."
-Add Authorized JavaScript origins: http://localhost:8501 (and your deployed URL, if applicable).
-Add Authorized redirect URIs: http://localhost:8501/ (and deployed URL, if applicable).
+Clone the Repository
+
+Clone the project:git clone https://github.com/Fisehazion/ai_file_organizer.git
+cd ai_file_organizer
 
 
-Download the client_secrets.json, rename it to credentials.json, and place it in the ai_file_organizer/ folder.
-Ensure your Google Drive folder is shared (set to "Anyone with the link" for testing).
 
-3. Run the App
 
-Navigate to the project folder:cd path/to/ai_file_organizer
-
+Run the App Locally (Optional)
 
 Launch the Streamlit app:streamlit run app.py
 
 
 Your browser will open to http://localhost:8501.
 
+
+Access the Deployed App
+
+Visit https://ai-file-organizer-jwh2cxrumjcloxyou7vvqp.streamlit.app to use the app directly without local setup.
+
+
+
 Using the App
-1. Open the App
 
-Access the app via the browser at http://localhost:8501.
+Open the App
 
-2. Choose Organization Mode
+Access the deployed app at https://ai-file-organizer-jwh2cxrumjcloxyou7vvqp.streamlit.app or locally at http://localhost:8501.
 
-Select Local Folder or Google Drive using the radio buttons.
 
-3. Organize Local Folder
+Upload and Organize Zip File
 
-Enter the full path to a local folder (e.g., C:\Users\YourName\Documents\MyFolder).
+Create a zip file of your folder (e.g., right-click TestFolder > Send to > Compressed (zipped) folder).
+Upload the zip file (e.g., TestFolder.zip) via the file uploader.
 Click Organize.
 The app will:
-Read file contents (text files supported).
-Use AI to categorize files into subfolders (e.g., Documents, Images).
-Move files to respective subfolders.
+Extract files from the zip.
+Categorize files based on extensions:
+Documents: .txt, .doc, .docx, .pdf, .xls, .xlsx, .ppt, .pptx
+Images: .jpg, .jpeg, .png, .gif, .bmp, .tiff
+Videos: .mp4, .avi, .mkv, .mov, .wmv
+Others: All other file types
+
+
+Skip duplicate files (based on content hash).
+Rename files to avoid conflicts (e.g., file.txt → file_1.txt).
+Display a progress bar and file processing status.
 
 
 
-4. Organize Google Drive Folder
 
-Paste the Google Drive folder link (e.g., https://drive.google.com/drive/folders/ABC123).
-Click Organize.
-On first run, authenticate via the browser (follow the OAuth prompts).
-The app will:
-Extract the folder ID from the link.
-Categorize files based on names/extensions (e.g., Documents for .txt, .pdf).
-Create subfolders in Drive (e.g., Documents, Images).
-Move files to appropriate subfolders.
+Download Organized Files
+
+After organization, click Download Organized Files to get organized_files.zip.
+Unzip the file to see folders (Documents/, Images/, Videos/, Others/) with categorized files (e.g., Documents/#ኮርስ የዮሐንስ ወንጌል አን�5ምታ.pdf).
 
 
+View Results
 
-5. View Results
+Check the Streamlit interface for success messages and lists of moved or skipped files.
+Verify the organized structure in the downloaded zip.
 
-Check the Streamlit interface for success/error messages.
-Verify organized files in the local folder or Google Drive.
+
 
 Configuration
 
 Edit config.py to tweak settings:
-AI_MODEL_NAME: Change the AI model (e.g., bert-base-uncased for a different model).
-DUPLICATE_THRESHOLD: Adjust duplicate detection sensitivity (0-1).
-MAX_FILES_TO_PROCESS: Limit the number of files processed.
+LOG_LEVEL: Adjust logging verbosity (e.g., logging.INFO).
+MAX_FILES_TO_PROCESS: Limit the number of files processed (default: 500).
 
 
 
 Troubleshooting
 
-Authentication Error: Ensure credentials.json is in the project folder and OAuth URIs are correct.
-Invalid Folder Link: Verify the Google Drive folder is shared and the link is correct.
+Invalid Zip File: Ensure the uploaded file is a valid .zip. Try re-zipping the folder.
+Unorganized Zip Output: Verify the downloaded organized_files.zip contains only Documents/, Images/, Videos/, Others/ folders. If not, check Streamlit Cloud logs.
 Slow Performance: Reduce MAX_FILES_TO_PROCESS in config.py.
-Dependencies Issue: Reinstall packages in the Conda environment.
+Dependencies Issue: Reinstall Streamlit in the Conda environment:pip install streamlit
+
+
 
 Notes
 
-Security: Do not share credentials.json publicly. Add it to .gitignore.
-Limits: The app processes up to 100 files by default (configurable).
-Future Updates: Check config.py for new features like email notifications.
+Security: Do not share sensitive files in the zip, as the app processes them on Streamlit Cloud.
+Limits: The app processes up to 500 files by default (configurable in config.py).
+Future Updates: Check config.py for new features or settings.
+Deployment: The app is hosted at https://ai-file-organizer-jwh2cxrumjcloxyou7vvqp.streamlit.app. For local use, follow setup instructions.
