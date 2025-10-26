@@ -1,1 +1,1 @@
--e "streamlit\nPyPDF2==3.0.1" 
+streamlit
