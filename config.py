@@ -1,5 +1,5 @@
 class AppConfig:
     AI_MODEL_NAME = "distilbert-base-uncased"
-    DUPLICATE_THRESHOLD = 0.95
-    LOG_LEVEL = "DEBUG"
+    AI_CONFIDENCE_THRESHOLD = 0.7
+    LOG_LEVEL = "INFO"
     MAX_FILES_TO_PROCESS = 200
