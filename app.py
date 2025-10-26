@@ -115,29 +115,72 @@ st.markdown("""
 st.markdown("---")
 st.markdown("""
     <style>
+        /* Responsive container */
+        .main-container {
+            max-width: 90vw;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        /* Title styling */
+        h1 {
+            font-size: min(5vw, 2.5rem) !important;
+            text-align: center;
+        }
+        /* Markdown and text styling */
+        .stMarkdown, .stText {
+            font-size: min(4vw, 1.2rem);
+            line-height: 1.5;
+        }
+        /* File uploader and button styling */
+        .stFileUploader, .stButton > button {
+            width: 100%;
+            max-width: 500px;
+            margin: 1rem auto;
+            font-size: min(4vw, 1rem);
+        }
+        /* Progress bar and status text */
+        .stProgress, .stEmpty {
+            max-width: 500px;
+            margin: 1rem auto;
+        }
+        /* Success and error messages */
+        .stSuccess, .stError, .stInfo {
+            font-size: min(4vw, 1rem);
+            padding: 0.5rem;
+        }
+        /* Subheader and list items */
+        .stSubheader, .stMarkdown li {
+            font-size: min(4vw, 1.1rem);
+        }
+        /* Footer styling */
         .footer {
             text-align: center;
-            padding: 20px 0;
+            padding: min(4vw, 2rem) 0;
         }
         .social-links {
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
-            gap: 20px;
-            margin-bottom: 10px;
+            gap: min(5vw, 1.5rem);
+            margin-bottom: min(2vw, 0.5rem);
         }
         .social-links a {
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: min(2vw, 0.5rem);
             color: #333;
-            font-size: 16px;
+            font-size: min(4vw, 1rem);
         }
         .social-links a:hover {
             color: #007bff;
         }
+        .social-links img {
+            width: min(6vw, 1.5rem);
+            height: min(6vw, 1.5rem);
+        }
         .glow-text {
-            font-size: 18px;
+            font-size: min(4.5vw, 1.2rem);
             font-weight: bold;
             color: #00f;
             text-shadow: 0 0 5px #00f, 0 0 10px #00f, 0 0 20px #00f;
@@ -151,30 +194,51 @@ st.markdown("""
                 text-shadow: 0 0 10px #00f, 0 0 20px #00f, 0 0 30px #00f;
             }
         }
+        /* Mobile-specific adjustments */
+        @media (max-width: 600px) {
+            .stFileUploader, .stButton > button {
+                max-width: 90vw;
+            }
+            .stProgress, .stEmpty {
+                max-width: 90vw;
+            }
+            .social-links {
+                gap: min(8vw, 1rem);
+            }
+            .social-links a {
+                font-size: min(5vw, 0.9rem);
+            }
+            .social-links img {
+                width: min(8vw, 1.2rem);
+                height: min(8vw, 1.2rem);
+            }
+        }
     </style>
-    <div class="footer">
-        <div class="social-links">
-            <a href="https://www.linkedin.com/in/fisehatsion-adisu-abute-929279208" target="_blank">
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg" alt="LinkedIn" width="24" height="24">
-                LinkedIn
-            </a>
-            <a href="https://www.instagram.com/fisehatsionadisu?igsh=NW93Mzd2aW5qN3hz" target="_blank">
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/instagram.svg" alt="Instagram" width="24" height="24">
-                Instagram
-            </a>
-            <a href="https://www.facebook.com/dfisa.adisu" target="_blank">
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg" alt="Facebook" width="24" height="24">
-                Facebook
-            </a>
-            <a href="https://t.me/fisiha1224" target="_blank">
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/telegram.svg" alt="Telegram" width="24" height="24">
-                Telegram
-            </a>
-            <a href="https://github.com/Fisehazion" target="_blank">
-                <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/github.svg" alt="GitHub" width="24" height="24">
-                GitHub
-            </a>
+    <div class="main-container">
+        <div class="footer">
+            <div class="social-links">
+                <a href="https://www.linkedin.com/in/fisehatsion-adisu-abute-929279208" target="_blank">
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/linkedin.svg" alt="LinkedIn">
+                    LinkedIn
+                </a>
+                <a href="https://www.instagram.com/fisehatsionadisu?igsh=NW93Mzd2aW5qN3hz" target="_blank">
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/instagram.svg" alt="Instagram">
+                    Instagram
+                </a>
+                <a href="https://www.facebook.com/dfisa.adisu" target="_blank">
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg" alt="Facebook">
+                    Facebook
+                </a>
+                <a href="https://t.me/fisiha1224" target="_blank">
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/telegram.svg" alt="Telegram">
+                    Telegram
+                </a>
+                <a href="https://github.com/Fisehazion" target="_blank">
+                    <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/github.svg" alt="GitHub">
+                    GitHub
+                </a>
+            </div>
+            <div class="glow-text">Developed by Fisehatsion Adisu @ 2025</div>
         </div>
-        <div class="glow-text">Developed by Fisehatsion Adisu @ 2025</div>
     </div>
 """, unsafe_allow_html=True)
