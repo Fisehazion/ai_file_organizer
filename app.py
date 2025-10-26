@@ -10,10 +10,10 @@ import logging
 logging.basicConfig(level=AppConfig.LOG_LEVEL, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Main UI
-st.title("AI File Organizer")
+st.title("SortSmart")
 st.markdown("""
-    Organize your files with ease! Upload a zip file of your folder, and the app will categorize files into 
-    **Documents**, **Images**, **Videos**, **Audio**, and **Others** based on their extensions. Duplicate files are skipped.
+    Organize your files with ease! Upload a zip file of your folder, and **SmartSort** will categorize files into 
+    **Documents**, **Images**, **Videos**, **Audio**, and **Others** based on their extensions or AI-based content analysis for text files. Duplicate files are skipped.
 """)
 
 # Initialize FileOrganizer
