@@ -229,7 +229,7 @@ st.markdown("""
                     <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg" alt="Facebook">
                     Facebook
                 </a>
-                <a href="https://t.me/conneccollab001" target="_blank">
+                <a href="https://t.me/connectcollab001" target="_blank">
                     <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/telegram.svg" alt="Telegram">
                     Telegram
                 </a>
