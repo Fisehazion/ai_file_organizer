@@ -12,7 +12,7 @@ Setup Instructions (For Developers)
 Install Dependencies
 
 Open Anaconda Prompt.
-Create and activate a new environment:conda create -n file_organizer python=3.9
+Create and activate a new environment:conda create -n file_organizer python=3.11
 conda activate file_organizer
 
 
