@@ -6,14 +6,15 @@ import tempfile
 import shutil
 from config import AppConfig
 import logging
+from io import BytesIO
 
 logging.basicConfig(level=AppConfig.LOG_LEVEL, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Main UI
 st.title("SortSmart")
 st.markdown("""
-    Organize your files with ease! Upload a zip file of your folder, and **SmartSort** will categorize files into 
-    **Documents**, **Images**, **Videos**, **Audio**, and **Others** based on their extensions or AI-based content analysis for text files. Duplicate files are skipped.
+    Organize your files with ease! Upload a zip file of your folder, and **SortSmart** will categorize files into 
+    **Documents**, **Images**, **Videos**, **Audio**, and **Others** based on their extensions. Duplicate files are skipped.
 """)
 
 # Initialize FileOrganizer
@@ -46,25 +47,17 @@ if st.button("Organize"):
                     status_text = st.empty()
                     moved_files, skipped_files = organizer.organize_files(unzip_dir, progress_bar, status_text)
 
-                    # Create clean output directory for organized files
-                    output_dir = os.path.join(temp_dir, "output")
-                    os.makedirs(output_dir, exist_ok=True)
-
-                    # Move only organized category folders to output_dir
-                    for category in ['Documents', 'Images', 'Videos', 'Audio', 'Others']:
-                        src_category = os.path.join(unzip_dir, category)
-                        dst_category = os.path.join(output_dir, category)
-                        if os.path.exists(src_category):
-                            shutil.move(src_category, dst_category)
-
-                    # Create output zip from organized folders
-                    output_zip = os.path.join(temp_dir, "organized_files.zip")
-                    with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zip_ref:
-                        for root, _, files in os.walk(output_dir):
-                            for file in files:
-                                file_path = os.path.join(root, file)
-                                arcname = os.path.relpath(file_path, output_dir)
-                                zip_ref.write(file_path, arcname)
+                    # Create output zip in memory
+                    output_zip_buffer = BytesIO()
+                    with zipfile.ZipFile(output_zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_ref:
+                        for category in ['Documents', 'Images', 'Videos', 'Audio', 'Others']:
+                            src_category = os.path.join(unzip_dir, category)
+                            if os.path.exists(src_category):
+                                for root, _, files in os.walk(src_category):
+                                    for file in files:
+                                        file_path = os.path.join(root, file)
+                                        arcname = os.path.join(category, os.path.basename(file_path))
+                                        zip_ref.write(file_path, arcname)
 
                     # Clear progress bar and show results
                     progress_bar.empty()
@@ -72,13 +65,13 @@ if st.button("Organize"):
                     st.success("Files organized! Download the organized files below.")
 
                     # Provide download link
-                    with open(output_zip, "rb") as f:
-                        st.download_button(
-                            label="Download Organized Files",
-                            data=f.read(),
-                            file_name="organized_files.zip",
-                            mime="application/zip"
-                        )
+                    output_zip_buffer.seek(0)
+                    st.download_button(
+                        label="Download Organized Files",
+                        data=output_zip_buffer,
+                        file_name="organized_files.zip",
+                        mime="application/zip"
+                    )
 
                     if moved_files:
                         st.subheader("Moved Files:")
